@@ -2,7 +2,7 @@ name: Deploy Uptime Kuma
 
 on:
   push:
-    branches: [main]
+    branches: [master]
 
 jobs:
   deploy:
