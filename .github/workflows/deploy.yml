@@ -1,0 +1,44 @@
+name: Deploy Uptime Kuma
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Simple build step
+        run: echo "Building frontend... "
+
+      - name: Deploy via SSH to Frontend server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.FRONTEND_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            # المسار اللي هنحط فيه المشروع على السيرفر
+            APP_DIR=~/uptime-kuma
+
+            # لو المجلد مش موجود نعمل clone، لو موجود نعمل pull
+            if [ ! -d "$APP_DIR" ]; then
+              mkdir -p $APP_DIR
+              git clone https://github.com/ahmedglala/obelion-task-front-repo.git $APP_DIR
+              cd $APP_DIR
+            else
+              cd $APP_DIR
+              git checkout main
+              git pull origin main
+            fi
+
+
+            docker compose down --remove-orphans || true
+            docker compose pull
+            docker compose up -d
+
+            echo "Uptime Kuma deployed successfully on port 3001"
